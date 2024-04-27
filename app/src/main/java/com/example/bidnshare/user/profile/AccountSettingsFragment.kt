@@ -60,6 +60,8 @@ class AccountSettingsFragment : Fragment() {
             "password" to password
         )
 
+
+
         ref.updateChildren(updates)
             .addOnSuccessListener {
                 progressDialog?.dismiss()
