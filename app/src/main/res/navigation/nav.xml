@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav"
+    app:startDestination="@id/splashFragment">
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.example.bidnshare.ui.SplashFragment"
+        android:label="SplashFragment" >
+        <action
+            android:id="@+id/action_splashFragment_to_signUpFragment"
+            app:destination="@id/signUpFragment" />
+        <action
+            android:id="@+id/action_splashFragment_to_signInFragment"
+            app:destination="@id/signInFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.example.bidnshare.ui.SignUpFragment"
+        android:label="SignUpFragment" />
+    <fragment
+        android:id="@+id/signInFragment"
+        android:name="com.example.bidnshare.ui.SignInFragment"
+        android:label="SignInFragment" >
+        <action
+            android:id="@+id/action_signInFragment_to_navUserFragment"
+            app:destination="@id/navUserFragment" />
+        <action
+            android:id="@+id/action_signInFragment_to_forgotPasswordFragment"
+            app:destination="@id/forgotPasswordFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/navUserFragment"
+        android:name="com.example.bidnshare.user.NavUserFragment"
+        android:label="fragment_nav_user"
+        tools:layout="@layout/fragment_nav_user" />
+    <fragment
+        android:id="@+id/forgotPasswordFragment"
+        android:name="com.example.bidnshare.ui.ForgotPasswordFragment"
+        android:label="fragment_forgot_password"
+        tools:layout="@layout/fragment_forgot_password" />
+    <fragment
+        android:id="@+id/detailsFragment"
+        android:name="com.example.bidnshare.user.details.DetailsFragment"
+        android:label="fragment_details"
+        tools:layout="@layout/fragment_details" />
+    <fragment
+        android:id="@+id/homeUserFragment"
+        android:name="com.example.bidnshare.user.HomeUserFragment"
+        android:label="fragment_home_user"
+        tools:layout="@layout/fragment_home_user" >
+        <action
+            android:id="@+id/action_homeUserFragment_to_detailsFragment"
+            app:destination="@id/detailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/myProfileFragment"
+        android:name="com.example.bidnshare.user.ProfileEveryUserFragment"
+        android:label="fragment_my_profile"
+        tools:layout="@layout/fragment_my_profile" >
+        <action
+            android:id="@+id/action_myProfileFragment_to_purchasedFragment"
+            app:destination="@id/purchasedFragment" />
+        <action
+            android:id="@+id/action_myProfileFragment_to_pendingTransactionsFragment"
+            app:destination="@id/pendingTransactionsFragment" />
+        <action
+            android:id="@+id/action_myProfileFragment_to_itemSoldFragment"
+            app:destination="@id/itemSoldFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/purchasedFragment"
+        android:name="com.example.bidnshare.user.profile.PurchasedFragment"
+        android:label="fragment_purchased"
+        tools:layout="@layout/fragment_purchased" />
+    <fragment
+        android:id="@+id/itemSoldFragment"
+        android:name="com.example.bidnshare.user.profile.ItemSoldFragment"
+        android:label="fragment_item_sold"
+        tools:layout="@layout/fragment_item_sold" />
+    <fragment
+        android:id="@+id/pendingTransactionsFragment"
+        android:name="com.example.bidnshare.user.profile.PendingTransactionsFragment"
+        android:label="fragment_pending_transactions"
+        tools:layout="@layout/fragment_pending_transactions" />
+    <fragment
+        android:id="@+id/accountSettingsFragment"
+        android:name="com.example.bidnshare.user.profile.AccountSettingsFragment"
+        android:label="fragment_account_settings"
+        tools:layout="@layout/fragment_account_settings" />
+    <fragment
+        android:id="@+id/profileAdminFragment"
+        android:name="com.example.bidnshare.admin.ProfileAdminFragment"
+        android:label="ProfileAdminFragment" />
+    <fragment
+        android:id="@+id/chatUserFragment"
+        android:name="com.example.mdcs.user.tabs.messenger.ChatUserFragment"
+        android:label="ChatUserFragment" />
+    <fragment
+        android:id="@+id/homeNavFragment"
+        android:name="com.example.bidnshare.admin.HomeNavFragment"
+        android:label="HomeNavFragment" />
+    <fragment
+        android:id="@+id/detailsAdminFragment"
+        android:name="com.example.bidnshare.admin.DetailsAdminFragment"
+        android:label="fragment_details_admin"
+        tools:layout="@layout/fragment_details_admin" />
+    <fragment
+        android:id="@+id/accountSettingsAdminFragment"
+        android:name="com.example.bidnshare.admin.accounts.AccountSettingsAdminFragment"
+        android:label="AccountSettingsAdminFragment" />
+</navigation>

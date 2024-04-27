@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">BidNShare</string>
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="sell_or_free_options">
+        <item>Sell</item>
+        <item>Free</item>
+    </string-array>
+</resources>

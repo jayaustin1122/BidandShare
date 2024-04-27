@@ -1,0 +1,17 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_HomeAdmin"
+        android:icon="@drawable/baseline_home_24"
+        android:title="Home" />
+    <item
+        android:id="@+id/navigation_accAdmin"
+        android:icon="@drawable/baseline_supervised_user_circle_24"
+        android:title="Accounts"/>
+
+    <item
+        android:id="@+id/navigation_profileAdmin"
+        android:icon="@drawable/baseline_person_24"
+        android:title="Profile"/>
+
+</menu>

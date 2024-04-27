@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "81839842938",
+    "firebase_url": "https://bid-nshare-default-rtdb.firebaseio.com",
+    "project_id": "bid-nshare",
+    "storage_bucket": "bid-nshare.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:81839842938:android:5db6358485392ac8c53dc3",
+        "android_client_info": {
+          "package_name": "com.example.bidnshare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAqRNIhujFbp6cN9tdKkzrnWOhvmuX4aQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
