@@ -38,7 +38,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
 
-
+const val TOPIC = "/topics/myTopic2"
 open class SignUpFragment : Fragment() {
     private lateinit var binding: FragmentSignUpBinding
     private lateinit var viewPager: ViewPager2

@@ -3,6 +3,8 @@ package com.example.bidnshare.user.details
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -57,6 +59,8 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
         attempt(uid,timeStamp)
         retrieveDetails(timeStamp,uid,image)
         showDataRecycler(timeStamp,uid,image)
+        val dbRef = FirebaseDatabase.getInstance().getReference("Users").child(uid!!).child("mySellItems").child(timeStamp!!)
+        startCheckingDatabase(dbRef)
         Glide.with(this@DetailsFragment.requireContext())
             .load(image)
             .into(binding.imageDetails)
@@ -76,6 +80,45 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
             findNavController().navigate(R.id.navUserFragment)
         }
 
+
+    }
+    fun startCheckingDatabase(dbRef: DatabaseReference) {
+        val handler = Handler(Looper.getMainLooper())
+        val delayMillis = 1000 // 1 second
+
+        // Define the runnable to be executed
+        val runnable = object : Runnable {
+            override fun run() {
+                // Call the function to check the database
+                showTimerTextview(dbRef)
+
+                // Schedule the next execution after the delay
+                handler.postDelayed(this, delayMillis.toLong())
+            }
+        }
+
+        // Start the runnable immediately
+        handler.post(runnable)
+    }
+    private fun showTimerTextview(dbRef: DatabaseReference) {
+        dbRef.child("countdownTimer").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val minutes = dataSnapshot.child("minutes").getValue(Long::class.java) ?: 0
+                val seconds = dataSnapshot.child("seconds").getValue(Long::class.java) ?: 0
+
+                // Display countdown timer in your TextView
+                binding.tvTime.text = String.format("%02d:%02d", minutes, seconds)
+                val currentTime = binding.tvTime.text.toString()
+                if (currentTime == "00:00") {
+                    // Show a toast message when the timer reaches 00:00
+                    Toast.makeText(requireContext(), "Timer reached 00:00!", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Handle error
+            }
+        })
     }
 
     private fun showDataRecycler(timeStamp: String?, uid: String?, image: String?) {

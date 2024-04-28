@@ -66,20 +66,20 @@ class HomeNavFragment : Fragment() {
         }
     }
     private fun loadUsersInfo() {
-        //reference
+        if (!isAdded) return // Check if the fragment is added
+
         val ref = FirebaseDatabase.getInstance().getReference("Users")
         ref.child(auth.uid!!)
             .addValueEventListener(object : ValueEventListener {
                 @SuppressLint("SetTextI18n")
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    //get user info
+                    if (!isAdded) return // Check again before performing UI operations
 
                     val image = "${snapshot.child("image").value}"
                     val name = "${snapshot.child("fullName").value}"
 
-                    //set data
                     binding.name.text = name
-                    Glide.with(requireContext())
+                    Glide.with(this@HomeNavFragment.requireContext())
                         .load(image)
                         .into(binding.circleImageView)
                     Toast.makeText(
@@ -90,9 +90,9 @@ class HomeNavFragment : Fragment() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-
+                    // Handle onCancelled
                 }
-
             })
     }
+
 }

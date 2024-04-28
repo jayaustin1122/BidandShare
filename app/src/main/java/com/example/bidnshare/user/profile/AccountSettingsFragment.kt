@@ -61,7 +61,6 @@ class AccountSettingsFragment : Fragment() {
         )
 
 
-
         ref.updateChildren(updates)
             .addOnSuccessListener {
                 progressDialog?.dismiss()

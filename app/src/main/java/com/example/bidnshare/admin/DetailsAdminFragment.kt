@@ -1,15 +1,13 @@
 package com.example.bidnshare.admin
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.text.InputType
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
@@ -19,6 +17,7 @@ import com.example.bidnshare.R
 import com.example.bidnshare.adapter.BidItemAdapter
 import com.example.bidnshare.databinding.FragmentDetailsAdminBinding
 import com.example.bidnshare.models.BidModels
+import com.example.bidnshare.service.CountdownService
 import com.example.bidnshare.user.details.ImageAdapter2
 import com.example.bidnshare.user.viewmodels.BidViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -56,6 +55,7 @@ class DetailsAdminFragment : Fragment() {
         val sellOrFree = arguments?.getString("sellOrFree")
         retrieveDetails(timeStamp,uid,image)
         showDataRecycler(timeStamp,uid,image)
+        val dbRef = FirebaseDatabase.getInstance().getReference("Users").child(uid!!).child("mySellItems").child(timeStamp!!)
         if (sellOrFree == "Live") {
             binding.imgBtnLive.setColorFilter(ContextCompat.getColor(requireContext(), R.color.g_red))
             binding.imgBtnLive.isEnabled = false
@@ -78,92 +78,68 @@ class DetailsAdminFragment : Fragment() {
             }
         }
         binding.imgBtnLive.setOnClickListener {
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle("Live?")
-                .setMessage("Are you sure you want to Live Auction this Item?")
-                .setPositiveButton("Confirm") { a, d ->
+            showAsk(dbRef,timeStamp,uid)
 
-                    updateInDb(uid,timeStamp,sellOrFree)
-                    Toast.makeText(context, "Item Updated", Toast.LENGTH_SHORT).show()
-                }
-                .setNegativeButton("Cancel") { a, d ->
-                    a.dismiss()
-                }
-                .show()
         }
 
     }
+    fun showAsk(dbRef: DatabaseReference, timeStamp: String, uid: String) {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Live?")
+            .setMessage("Are you sure you want to Live Auction this Item?")
+            .setPositiveButton("Confirm") { a, d ->
 
-    private fun updateInDb(uid: String?, timeStamp: String?, sellOrFree: String?) {
-        val dbRef = FirebaseDatabase.getInstance().getReference("Users").child(uid!!).child("mySellItems").child(timeStamp!!)
+                updateInDb(dbRef,timeStamp,uid)
+                Toast.makeText(requireContext(), "Item Updated", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel") { a, d ->
+                a.dismiss()
+            }
+            .show()
+    }
 
+    private fun updateInDb(dbRef: DatabaseReference, timeStamp: String, uid: String) {
         // Update the type field in the database
         dbRef.child("sellOrFree").setValue("Live")
             .addOnSuccessListener {
                 // Handle successful update
                 Toast.makeText(context, "Item Updated in Database", Toast.LENGTH_SHORT).show()
                 binding.imgBtnLive.setColorFilter(ContextCompat.getColor(requireContext(), R.color.g_red))
-                showTimeLimitDialog(dbRef)
+                showTimeLimitDialog(dbRef,timeStamp,uid)
             }
             .addOnFailureListener { e ->
                 // Handle failed update
                 Toast.makeText(context, "Failed to update item: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-    private fun showTimeLimitDialog(dbRef: DatabaseReference) {
-        val options = arrayOf("1 minute", "10 minutes", "15 minutes", "Custom")
+
+    private fun showTimeLimitDialog(dbRef: DatabaseReference, timeStamp: String, uid: String) {
+        val options = arrayOf("1 minute", "10 minutes", "15 minutes")
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Choose Auction Duration")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> startAuctionCountdown(dbRef,  10 * 1000) // 5 minutes
-                    1 -> startAuctionCountdown(dbRef, 10 * 60 * 1000) // 10 minutes
-                    2 -> startAuctionCountdown(dbRef, 15 * 60 * 1000) // 15 minutes
-                    3 -> showCustomTimeLimitDialog(dbRef) // Custom duration
+                    0 -> gotoService(dbRef,  1,timeStamp,uid) // 5 minutes
+                    1 -> gotoService(dbRef, 10, timeStamp, uid) // 10 minutes
+                    2 -> gotoService(dbRef, 15, timeStamp, uid) // 15 minutes
+
                 }
             }
             .show()
     }
-    private fun showCustomTimeLimitDialog(dbRef: DatabaseReference) {
-        val builder = AlertDialog.Builder(requireContext())
-        val input = EditText(requireContext())
-        input.inputType = InputType.TYPE_CLASS_NUMBER
-        builder.setView(input)
-        builder.setTitle("Custom Auction Duration (minutes)")
-            .setPositiveButton("OK") { dialog, _ ->
-                val duration = input.text.toString().toIntOrNull()
-                if (duration != null && duration > 0) {
-                    startAuctionCountdown(dbRef, duration * 60 * 1000.toLong())
-                } else {
-                    Toast.makeText(requireContext(), "Invalid duration", Toast.LENGTH_SHORT).show()
-                }
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.cancel()
-            }
-            .show()
+
+
+
+
+    private fun gotoService(dbRef: DatabaseReference, i: Int, timeStamp: String, uid: String) {
+        val intent = Intent(requireContext(), CountdownService::class.java)
+        intent.putExtra("timeStamp", timeStamp) // Corrected
+        intent.putExtra("uid", uid) // Corrected
+        intent.putExtra("durationMinutes", i)
+        ContextCompat.startForegroundService(requireContext(), intent)
+        Toast.makeText(context, "Iasdasd", Toast.LENGTH_SHORT).show()
     }
 
-
-    private fun startAuctionCountdown(dbRef: DatabaseReference, durationMillis: Long) {
-        // Get current time in milliseconds
-        val currentTimeMillis = System.currentTimeMillis()
-        // Calculate end time of the auction
-        val auctionEndTimeMillis = currentTimeMillis + durationMillis
-
-        // Store the end time of the auction in the database
-        dbRef.child("auctionEndTime").setValue(auctionEndTimeMillis)
-            .addOnSuccessListener {
-                // Handle successful storing of auction end time
-                // Start countdown timer in your app
-                startCountdownTimer(auctionEndTimeMillis, dbRef)
-            }
-            .addOnFailureListener { e ->
-                // Handle failure in storing auction end time
-                Log.e("TAG", "Failed to store auction end time: ${e.message}")
-            }
-    }
     private fun startCountdownTimer(auctionEndTimeMillis: Long, dbRef: DatabaseReference) {
         val countdownTimer = object : CountDownTimer(auctionEndTimeMillis - System.currentTimeMillis(), 1000) {
             override fun onTick(millisUntilFinished: Long) {
