@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
@@ -27,6 +28,9 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
     private lateinit var binding: FragmentDetailsBinding
@@ -37,8 +41,6 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
     private var onBidAddedListener: BidDialogFragment.OnBidAddedListener? = null
     private lateinit var bidViewModel: BidViewModel
 
-
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -46,6 +48,28 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
         binding = FragmentDetailsBinding.inflate(layoutInflater)
         return binding.root
     }
+    private fun showTimerTextview(dbRef: DatabaseReference) {
+        dbRef.child("countdownTimer").addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val minutes = dataSnapshot.child("minutes").getValue(Long::class.java) ?: 0
+                val seconds = dataSnapshot.child("seconds").getValue(Long::class.java) ?: 0
+
+                // Display countdown timer in your TextView
+                binding.tvTime.text = String.format("%02d:%02d", minutes, seconds)
+
+                // Check if timer has reached "00:00"
+                if (minutes == 0L && seconds == 0L) {
+                    // Navigate to HomeFragment
+                    findNavController().navigate(R.id.navUserFragment)
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Handle error
+            }
+        })
+    }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -60,7 +84,7 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
         retrieveDetails(timeStamp,uid,image)
         showDataRecycler(timeStamp,uid,image)
         val dbRef = FirebaseDatabase.getInstance().getReference("Users").child(uid!!).child("mySellItems").child(timeStamp!!)
-        startCheckingDatabase(dbRef)
+        showTimerTextview(dbRef)
         Glide.with(this@DetailsFragment.requireContext())
             .load(image)
             .into(binding.imageDetails)
@@ -82,45 +106,6 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
 
 
     }
-    fun startCheckingDatabase(dbRef: DatabaseReference) {
-        val handler = Handler(Looper.getMainLooper())
-        val delayMillis = 1000 // 1 second
-
-        // Define the runnable to be executed
-        val runnable = object : Runnable {
-            override fun run() {
-                // Call the function to check the database
-                showTimerTextview(dbRef)
-
-                // Schedule the next execution after the delay
-                handler.postDelayed(this, delayMillis.toLong())
-            }
-        }
-
-        // Start the runnable immediately
-        handler.post(runnable)
-    }
-    private fun showTimerTextview(dbRef: DatabaseReference) {
-        dbRef.child("countdownTimer").addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val minutes = dataSnapshot.child("minutes").getValue(Long::class.java) ?: 0
-                val seconds = dataSnapshot.child("seconds").getValue(Long::class.java) ?: 0
-
-                // Display countdown timer in your TextView
-                binding.tvTime.text = String.format("%02d:%02d", minutes, seconds)
-                val currentTime = binding.tvTime.text.toString()
-                if (currentTime == "00:00") {
-                    // Show a toast message when the timer reaches 00:00
-                    Toast.makeText(requireContext(), "Timer reached 00:00!", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
-            }
-        })
-    }
-
     private fun showDataRecycler(timeStamp: String?, uid: String?, image: String?) {
         val userBid = database.child("Users")
             .child(uid!!)
@@ -161,7 +146,6 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
             }
         })
     }
-
     fun retrieveDetails(timeStamp: String?, uid: String?, image: String?) {
         if (timeStamp != null && uid != null) {
             val query = database.child("Users").child(uid).child("mySellItems")
@@ -211,11 +195,7 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
                                         .toString(), Toast
                                         .LENGTH_SHORT).show()
 
-                                    Toast.makeText(requireContext(),bidStatusValue.toString(),Toast.LENGTH_SHORT).show()
-                                    if (bidStatusValue == true) {
-                                        bidStatus = true
 
-                                    }
                                     // Check if bidPriceString is not null and can be converted to double
                                     val bidPrice = bidPriceString?.toDoubleOrNull() ?: 0.0
                                     if (bidPrice > highestBidPrice) {
@@ -226,11 +206,6 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
                                 // Update UI with the highest bid price
                                 binding.tvPriceCurentBid.text = highestBidPrice.toString()
 
-                                if (bidStatus) {
-                                    startBidStatusService(uid, timeStamp)
-                                } else {
-                                    stopBidStatusService()
-                                }
                                 binding.tvTime.text
                             }
 
@@ -270,7 +245,6 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
         dialogFragment.arguments = args
         dialogFragment.show(childFragmentManager, "BidDialogFragment")
     }
-
     fun attempt(uid: String?, timeStamp: String?) {
         val userBid = database.child("Users").child(uid!!).child("mySellItems").child(timeStamp.toString()).child("Bids")
 
@@ -301,19 +275,6 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
             }
         })
     }
-    private fun startBidStatusService(uid: String?, timeStamp: String?) {
-        val serviceIntent = Intent(requireContext(), BidStatusService::class.java).apply {
-            putExtra("uid", uid)
-            putExtra("timeStamp", timeStamp)
-        }
-        requireContext().startService(serviceIntent)
-    }
-
-    private fun stopBidStatusService() {
-        val serviceIntent = Intent(requireContext(), BidStatusService::class.java)
-        requireContext().stopService(serviceIntent)
-    }
-
     override fun onBidAdded(userHasBid: Boolean) {
         if (userHasBid) {
             binding.btnBid.visibility = View.GONE

@@ -56,6 +56,7 @@ class DetailsAdminFragment : Fragment() {
         retrieveDetails(timeStamp,uid,image)
         showDataRecycler(timeStamp,uid,image)
         val dbRef = FirebaseDatabase.getInstance().getReference("Users").child(uid!!).child("mySellItems").child(timeStamp!!)
+        showTimerTextview(dbRef)
         if (sellOrFree == "Live") {
             binding.imgBtnLive.setColorFilter(ContextCompat.getColor(requireContext(), R.color.g_red))
             binding.imgBtnLive.isEnabled = false
@@ -128,9 +129,6 @@ class DetailsAdminFragment : Fragment() {
             .show()
     }
 
-
-
-
     private fun gotoService(dbRef: DatabaseReference, i: Int, timeStamp: String, uid: String) {
         val intent = Intent(requireContext(), CountdownService::class.java)
         intent.putExtra("timeStamp", timeStamp) // Corrected
@@ -140,39 +138,21 @@ class DetailsAdminFragment : Fragment() {
         Toast.makeText(context, "Iasdasd", Toast.LENGTH_SHORT).show()
     }
 
-    private fun startCountdownTimer(auctionEndTimeMillis: Long, dbRef: DatabaseReference) {
-        val countdownTimer = object : CountDownTimer(auctionEndTimeMillis - System.currentTimeMillis(), 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                // Convert milliseconds to minutes and seconds
-                val minutes = (millisUntilFinished / 1000) / 60
-                val seconds = (millisUntilFinished / 1000) % 60
-                // Display countdown timer in your TextView
-                binding.tvTime.text = String.format("%02d:%02d", minutes, seconds)
-
-                // Update countdown timer in the database
-                val timerMap = mapOf("minutes" to minutes, "seconds" to seconds)
-                dbRef.child("countdownTimer").setValue(timerMap)
-            }
-
-            override fun onFinish() {
-                // Handle auction finish
-                binding.tvTime.text = "00:00"
-                showTimerTextview(dbRef)
-                // Optionally, perform any actions after the auction ends
-                retrieveHighestBidder(dbRef)
-            }
-        }
-        countdownTimer.start()
-    }
 
     private fun showTimerTextview(dbRef: DatabaseReference) {
-        dbRef.child("countdownTimer").addListenerForSingleValueEvent(object : ValueEventListener {
+        dbRef.child("countdownTimer").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val minutes = dataSnapshot.child("minutes").getValue(Long::class.java) ?: 0
                 val seconds = dataSnapshot.child("seconds").getValue(Long::class.java) ?: 0
 
                 // Display countdown timer in your TextView
                 binding.tvTime.text = String.format("%02d:%02d", minutes, seconds)
+
+                // Check if timer has reached "00:00"
+                if (minutes == 0L && seconds == 0L) {
+                    // Navigate to HomeFragment
+                    findNavController().navigate(R.id.homeNavFragment)
+                }
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
@@ -182,110 +162,11 @@ class DetailsAdminFragment : Fragment() {
     }
 
 
-    private fun retrieveHighestBidder(dbRef: DatabaseReference) {
-        dbRef.child("Bids")
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(bidsSnapshot: DataSnapshot) {
-                    var highestBidPriceString: String? = null
-                    var highestBidderUid: String? = null
-
-                    for (bidSnapshot in bidsSnapshot.children) {
-                        val bidPriceString = bidSnapshot.child("bidPrice").getValue(String::class.java)
-                        val bidderId = bidSnapshot.child("userBid").getValue(String::class.java)
-
-                        if (bidPriceString != null) {
-                            val bidPrice = bidPriceString.toDoubleOrNull() ?: 0.0
-                            if (bidPrice > (highestBidPriceString?.toDoubleOrNull() ?: 0.0)) {
-                                highestBidPriceString = bidPriceString
-                                highestBidderUid = bidderId
-                            }
-                        }
-                    }
-
-                    if (highestBidderUid != null) {
-                        // If the highest bidder's ID is found, pass it to retrieveBidderInfo function.
-                        retrieveBidderInfo(highestBidderUid,dbRef)
-                    } else {
-                        // Handle case where there are no bids.
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    // Handle error
-                }
-            })
-    }
 
 
 
-    private fun retrieveBidderInfo(uid: String?, dbRef: DatabaseReference) {
-        val userRef = FirebaseDatabase.getInstance().getReference("Users").child(uid!!)
-        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val bidderName = snapshot.child("fullName").getValue(String::class.java)
-                val uid = snapshot.child("uid").getValue(String::class.java)
-                // Show dialog with bidder's name
-                showDialogWithBidderName(bidderName)
-                updateSellOrFree(dbRef,uid)
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                // Handle error
-            }
-        })
-    }
 
-    private fun updateSellOrFree(dbRef: DatabaseReference, uid: String?) {
-        dbRef.child("sellOrFree").setValue("Ordered")
-            .addOnSuccessListener {
-                // If the first update is successful, update the second value
-                dbRef.child("type").setValue("Ending")
-                    .addOnSuccessListener {
-                        // Handle successful update of both values
-                        dbRef.child("orderedBy").setValue(uid)
-                            .addOnSuccessListener {
-                                Toast.makeText(
-                                    context,
-                                    "Item Transfer to the Client",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-
-                            }
-                            .addOnFailureListener { e ->
-                                // Handle failure of the second update
-                                Toast.makeText(
-                                    context,
-                                    "Failed to update item type: ${e.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                    }
-            }
-            .addOnFailureListener { e ->
-                // Handle failure of the first update
-                Toast.makeText(context, "Failed to update item sellOrFree: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun showDialogWithBidderName(bidderName: String?) {
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Auction Ended")
-            .setMessage("The auction has ended. The highest bidder is: $bidderName")
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-                findNavController().apply {
-                    popBackStack(
-                        R.id.splashFragment,
-                        false
-                    ) // Pop all fragments up to HomeFragment
-                    navigate(R.id.homeNavFragment) // Navigate to LoginFragment
-                }
-                // Optionally, perform any action after user clicks OK
-            }
-            .setCancelable(false) // Prevent dismissing the dialog by tapping outside
-            .show()
-
-    }
 
     private fun showDataRecycler(timeStamp: String?, uid: String?, image: String?) {
         val userBid = database.child("Users")
