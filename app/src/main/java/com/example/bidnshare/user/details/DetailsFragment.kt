@@ -37,8 +37,6 @@ class DetailsFragment : Fragment(),BidDialogFragment.OnBidAddedListener {
     private lateinit var database: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private lateinit var imageAdapter: ImageAdapter2
-    private lateinit var bidAdapter: BidItemAdapter
-    private var onBidAddedListener: BidDialogFragment.OnBidAddedListener? = null
     private lateinit var bidViewModel: BidViewModel
 
     override fun onCreateView(

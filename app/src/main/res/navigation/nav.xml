@@ -110,4 +110,14 @@
         android:id="@+id/accountSettingsAdminFragment"
         android:name="com.example.bidnshare.admin.accounts.AccountSettingsAdminFragment"
         android:label="AccountSettingsAdminFragment" />
+    <fragment
+        android:id="@+id/allDetailsFragment"
+        android:name="com.example.bidnshare.user.profile.detailsItem.AllDetailsFragment"
+        android:label="fragment_all_details"
+        tools:layout="@layout/fragment_all_details" />
+    <fragment
+        android:id="@+id/paymentFragment"
+        android:name="com.example.bidnshare.user.profile.PaymentFragment"
+        android:label="fragment_payment"
+        tools:layout="@layout/fragment_payment" />
 </navigation>

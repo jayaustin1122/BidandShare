@@ -46,6 +46,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCEix01mxBXB0cErXwfZ-otgsod9Xgd90c"/>
         <service
             android:name=".notification.FirebaseService"
             android:exported="true"

@@ -15,27 +15,20 @@ import com.example.bidnshare.models.PendingItem
 import com.example.bidnshare.user.details.DetailsFragment
 import com.example.bidnshare.user.profile.detailsItem.AllDetailsFragment
 
-class PendingAdapter(
+class ItemSoldAdapter(
     private val context: Context,
     private val navController: NavController,
     private val items: MutableList<PendingItem>,
     private val emptyListener: (Any) -> Unit
 ) :
-    RecyclerView.Adapter<PendingAdapter.PendingViewHolder>() {
+    RecyclerView.Adapter<ItemSoldAdapter.PendingViewHolder>() {
 
     private var selectedItems: MutableSet<PendingItem> = mutableSetOf()
     private var totalPrice: Double = 0.0
     private lateinit var totalPriceTextView: TextView
     private lateinit var payButton: Button
 
-    fun setTotalPriceTextView(textView: TextView) {
-        totalPriceTextView = textView
-        updateTotalPriceTextView()
-    }
 
-    fun setPayButton(button: Button) {
-        payButton = button
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PendingViewHolder {
         val inflater = LayoutInflater.from(context)
@@ -60,16 +53,6 @@ class PendingAdapter(
             navController.navigate(R.id.allDetailsFragment, bundle)
         }
 
-        holder.binding.checkbox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                selectedItems.add(item)
-            } else {
-                selectedItems.remove(item)
-            }
-            updateTotalPriceTextView()
-            checkPayButtonEnable()
-            emptyListener.invoke(selectedItems.isEmpty())
-        }
     }
 
     override fun getItemCount(): Int {
@@ -78,7 +61,10 @@ class PendingAdapter(
         return items.size
     }
 
-
+    fun setItems(items: List<PendingItem>) {
+        this.items.clear()
+        this.items.addAll(items)
+    }
 
     inner class PendingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val binding = ItemRowPendingBinding.bind(itemView)
@@ -88,27 +74,11 @@ class PendingAdapter(
             binding.tvPrice.text = item.price
             binding.checkbox.isChecked = selectedItems.contains(item)
             // Load image using Glide
-            Glide.with(context)
-                .load(item.imageUrl)
-                .into(binding.img)
+//            Glide.with(context)
+//                .load(item.imageUrl)
+//                .into(binding.img)
         }
     }
 
-    private fun updateTotalPriceTextView() {
-        totalPrice = selectedItems.sumByDouble { it.price.toDouble() }
-        totalPriceTextView.text = totalPrice.toString()
-    }
-
-    private fun checkPayButtonEnable() {
-        payButton.isEnabled = selectedItems.isNotEmpty()
-    }
-    fun setItems(items: List<PendingItem>) {
-        this.items.clear()
-        this.items.addAll(items)
-    }
-    fun getSelectedItem(): PendingItem? {
-        // Return the first selected item, or null if no item is selected
-        return selectedItems.firstOrNull()
-    }
 }
 
